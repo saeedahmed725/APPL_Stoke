@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from fastapi import FastAPI
-import tensorflow as tf
+import uvicorn
 import yfinance as yf
 import tensorflow as tf
 print("TensorFlow version:", tf.__version__)
@@ -59,5 +59,5 @@ def predict_stock():
     }
 
 if __name__ == "__main__":
-    import uvicorn
+    
     uvicorn.run(app, host="0.0.0.0", port=8000)
