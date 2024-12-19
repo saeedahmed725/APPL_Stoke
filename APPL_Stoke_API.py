@@ -8,15 +8,13 @@ import uvicorn
 import yfinance as yf
 import tensorflow as tf
 
-
-# Initialize FastAPI app
+# # Initialize FastAPI app
 app = FastAPI()
 
 # Load ML model and scaler
-model = tf.keras.models.load_model("model.keras")
+model = tf.keras.models.load_model("model (1).keras")
 scaler = MinMaxScaler()
 
-# Function to fetch last 60-minute AAPL stock data
 def fetch_last_60_minutes():
     ticker = yf.Ticker("AAPL")
     data = ticker.history(period="1d", interval="1m")
@@ -39,6 +37,7 @@ def predict_stock():
 
     # Fetch last 60 Close prices
     last_60_closes = fetch_last_60_minutes()
+    
     # Reshape and scale the data
     close_df = pd.DataFrame(last_60_closes, columns=['Open','High', 'Low', 'Close', "Volume"])
     scaled_data = scaler.fit_transform(close_df)
@@ -52,15 +51,39 @@ def predict_stock():
 
     predicted_price_inverse = scaler.inverse_transform(input_for_inverse_transform)
 
-
-
-    # Fetch the current real-time price
-    current_price = scrape_aapl_data()
-
-    return {
-        "scraped_current_price": current_price,
-        "predicted_price": predicted_price_inverse[0][0]
-    }
+    return {"predicted_price": predicted_price_inverse[0][0]}
+    
+    
+    
+  
+@app.get("/current-price")
+def get_current_price():
+    price = scrape_aapl_data()
+    return {"price": price}
+  
+    
+    
+    
+@app.get("/last-60-minutes")
+def get_last_60_minutes():
+    data = fetch_last_60_minutes()
+    data.reset_index(inplace=True)  # Reset index to access datetime
+    result = [
+        {
+            "datetime": row["Datetime"].isoformat(),
+            "open": row["Open"],
+            "high": row["High"],
+            "low": row["Low"],
+            "close": row["Close"],
+            "volume": int(row["Volume"]),
+            "dividends": row["Dividends"],
+            "stock_splits": row["Stock Splits"]
+        }
+        for _, row in data.iterrows()
+    ]
+    return result 
+    
+    
 
 if __name__ == "__main__":
     
